@@ -52,3 +52,35 @@ test(`Fail if dependent key fail.`, () => {
   };
   expect(executeConditionBySource(keyValues, conditionSources)).toEqual(["label3", "label1"]);
 });
+
+test('in operator', () => {
+  const keyValues = { label1: '1', label2: '2', label3: '3' };
+  const conditionSources = {
+    label1: `label1 in ["1", "2"]`,
+  };
+  expect(executeConditionBySource(keyValues, conditionSources)).toEqual([]);
+})
+
+test("in operator fail", () => {
+  const keyValues = { label1: '1', label2: '2', label3: '3' };
+  const conditionSources = {
+    label1: `label1 in ["2", "3"]`,
+  };
+  expect(executeConditionBySource(keyValues, conditionSources)).toEqual(["label1"]);
+});
+
+test("includes operator", () => {
+  const keyValues = { label1: '123', label2: '2', label3: '3' };
+  const conditionSources = {
+    label1: `label1 includes "1"`,
+  };
+  expect(executeConditionBySource(keyValues, conditionSources)).toEqual([]);
+});
+
+test("includes operator fail", () => {
+  const keyValues = { label1: '123', label2: '2', label3: '3' };
+  const conditionSources = {
+    label1: `label1 includes "4"`,
+  };
+  expect(executeConditionBySource(keyValues, conditionSources)).toEqual(["label1"]);
+});

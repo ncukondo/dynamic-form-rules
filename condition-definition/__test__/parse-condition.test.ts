@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { base_unit, and_unit, or_unit, parseCondition } from "../parse-condition";
+import { base_unit, and_unit, or_unit, parseCondition, in_array_unit, array } from "../parse-condition";
 
 test(`label1=1`, () => {
   expect(base_unit(`label1=1`, 0)).toEqual({
@@ -182,6 +182,49 @@ test(`label1<>"1 1" or (label2=3 and label3="3 3") and label4=4`, () => {
               eq: {
                 label: 'label4',
                 value: '4'
+              }
+            }
+          ],
+        },
+      ]
+    }
+  })
+});
+
+test(`label1<>"1 1" or (label2=3 and label3="3 3") and label4 in [1,3,"none of them"]`, () => {
+  expect(parseCondition(`label1<>"1 1" or (label2=3 and label3="3 3") and label4 in [1,3,"none of them"]`)).toEqual({
+    ok: true,
+    pos: 79,
+    value: {
+      or: [
+        {
+          neq: {
+            label: 'label1',
+            value: '1 1'
+          }
+        },
+        {
+          and: [
+            {
+              and: [
+                {
+                  eq: {
+                    label: 'label2',
+                    value: '3'
+                  }
+                },
+                {
+                  eq: {
+                    label: 'label3',
+                    value: '3 3'
+                  }
+                }
+              ]
+            },
+            {
+              in: {
+                label: 'label4',
+                value: ['1', '3', 'none of them']
               }
             }
           ],

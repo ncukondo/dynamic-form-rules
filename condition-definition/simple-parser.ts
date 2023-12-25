@@ -88,14 +88,19 @@ const or: <T>(...parsers: [...Parser<T>[]]) => Parser<T> =
     return { ok: false };
   };
 
+// Utility types (mainly for seq function)
+type Box<T> = Parser<T>;
+type TupledBox<T> = { [P in keyof T]: Box<T[P]> };
+type UnTupledBox<T extends TupledBox<unknown>> = { [P in keyof T]: T[P] extends Box<infer U> ? U : never };
+
 /**
  * Sequence parsers. Apply each parser in the list in order and return the result as an array.
  * @param parsers parsers to combine
  * @returns list of results
  */
-const seq: <T>(...parsers: [...Parser<T>[]]) => Parser<T[]> =
-  <T>(...parsers: [...Parser<T>[]]) => (text: string, pos: number) => {
-    const value: T[] = [];
+const seq: <T extends readonly [...Parser<unknown>[]]>(...parsers: T) => Parser<UnTupledBox<T>> =
+  <T extends readonly [...Parser<unknown>[]]>(...parsers: T) => (text: string, pos: number) => {
+    const value: any[] = [];
     let currentPos = pos;
     for (const parser of parsers) {
       const res = parser(text, currentPos);
@@ -103,8 +108,9 @@ const seq: <T>(...parsers: [...Parser<T>[]]) => Parser<T[]> =
       currentPos = res.pos;
       value.push(res.value);
     }
-    return { ok: true, pos: currentPos, value };
+    return { ok: true, pos: currentPos, value: value as UnTupledBox<T> };
   };
+
 
 /**
  * Apply a parser repeatedly until it fails.
@@ -139,6 +145,24 @@ const skipSecond: <T>(first: Parser<T>, second: Parser<unknown>) => Parser<T> =
       return second(text, res.pos).ok ? res : { ok: false };
     };
 
+/**
+ * check if target parser succeeds and followedBy parser also succeeds.
+ * Ignore the result of followedBy parser.
+ * @param target target parser
+ * @param followedBy parser to apply after target
+ * @returns result of target parser
+ */
+const peak: <T>(target: Parser<T>, followedBy: Parser<unknown>) => Parser<T> =
+  <T>(target: Parser<T>, followedBy: Parser<unknown>) =>
+    (text: string, pos: number) => {
+      const res = target(text, pos);
+      if (!res.ok) return res;
+      const res2 = followedBy(text, res.pos);
+      if (!res2.ok) return { ok: false, pos, message: "followedBy failed" };
+      return res;
+    };
+
+
 const quoted = <T>(
   startQuote: Parser<unknown>,
   parser: Parser<T>,
@@ -154,7 +178,7 @@ const quoted = <T>(
     return { ok: true, pos: res3.pos, value: res2.value };
   };
 
-const seqBy: <T>(parser: Parser<T>, sep: Parser<unknown>) => Parser<T[]> =
+const sepBy: <T>(parser: Parser<T>, sep: Parser<unknown>) => Parser<T[]> =
   <T>(parser: Parser<T>, sep: Parser<unknown>) =>
     (
       text: string,
@@ -205,6 +229,7 @@ export {
   skipSecond,
   lazy,
   quoted,
-  seqBy,
+  sepBy,
   eof,
+  peak,
 }

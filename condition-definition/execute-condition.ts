@@ -1,4 +1,4 @@
-import { type Condition, parseCondition } from "./parse-condition";
+import { type Condition, parseCondition, calcOperators } from "./parse-condition";
 
 type KeyValues = Record<string, string>;
 type Key<T extends KeyValues> = keyof T;
@@ -28,20 +28,43 @@ const evaluateCondition: <T extends KeyValues>(keyValues: T, condition: Conditio
   } else if ('neq' in condition) {
     const { label, value } = condition.neq;
     return keyValues[label] !== value;
+  } else if ('in' in condition) {
+    const { label, value } = condition.in;
+    return value.includes(keyValues[label]);
+  } else if ('includes' in condition) {
+    const { label, value } = condition.includes;
+    return keyValues[label].includes(value);
+  } else if ('notIncludes' in condition) {
+    const { label, value } = condition.notIncludes;
+    return !keyValues[label].includes(value);
+  } else if ('matches' in condition) {
+    const { label, value } = condition.matches;
+    return new RegExp(value).test(keyValues[label]);
   } else {
     throw new Error(`unknown condition: ${JSON.stringify(condition)}`);
   }
 }
 
 const extractDependentLabels: (condition: Condition) => string[] = (condition: Condition) => {
+  const containsCalcOperator = (condition: Condition): boolean => {
+    return calcOperators.some(op => op in condition);
+  }
+  const extractLabels = (condition: Condition): string[] => {
+    return calcOperators.flatMap(op => {
+      if (op in condition) {
+        const { label } = condition[op as keyof typeof condition];
+        return [label];
+      } else {
+        return [];
+      }
+    })
+  }
   if ('and' in condition) {
     return condition.and.flatMap(extractDependentLabels);
   } else if ('or' in condition) {
     return condition.or.flatMap(extractDependentLabels);
-  } else if ('eq' in condition) {
-    return [condition.eq.label];
-  } else if ('neq' in condition) {
-    return [condition.neq.label];
+  } else if (containsCalcOperator(condition)) {
+    return extractLabels(condition);
   } else {
     throw new Error(`unknown condition: ${JSON.stringify(condition)}`);
   }

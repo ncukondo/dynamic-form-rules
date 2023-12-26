@@ -68,7 +68,7 @@ const lParen = skipFirst(white, stringParser('('));
 const rParen = skipFirst(white, stringParser(')'));
 const lSquare = skipFirst(white, stringParser('['));
 const rSquare = skipFirst(white, stringParser(']'));
-const camma = skipFirst(white, stringParser(','));
+const comma = skipFirst(white, stringParser(','));
 
 const and = peak(skipFirst(white, stringParser('and')), or(white_required, lParen));
 const or_ = peak(skipFirst(white, stringParser('or')), or(white_required, lParen));
@@ -87,7 +87,7 @@ const double_quoted_value = quoted(quote, regParser(/[^"]*/), quote);
 const single_quoted_value = quoted(stringParser("'"), regParser(/[^']*/), stringParser("'"));
 const value = skipFirst(white, or(double_quoted_value, single_quoted_value, simple_value));
 
-const array = quoted(lSquare, sepByAtLeast(value, camma, 2), rSquare);
+const array = quoted(lSquare, sepBy(value, comma), rSquare);
 
 const eq_unit = map(seq(label, eq, value), ([label, _, value]) => ({ eq: { label, value } }));
 const neq_unit = map(seq(label, neq, value), ([label, _, value]) => ({ neq: { label, value } }));
@@ -104,7 +104,7 @@ const unit: Parser<Condition> = lazy<Condition>(() => or<Condition>(or_unit, and
 
 const condition = quoted(white, unit, white);
 
-const parseCondition = (input: string) => skipSecond(condition, eof)(input, 0);
+const parseCondition = (input: string) => skipSecond(condition, eof())(input, 0);
 
 
 export { parseCondition, calcOperators, type Condition, type And, type Or, type Unit, type Eq, type Neq, type Label, type Value };

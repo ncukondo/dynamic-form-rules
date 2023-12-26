@@ -304,6 +304,12 @@ const sepBy: <T>(parser: Parser<T>, sep: Parser<unknown>) => Parser<T[]> =
       return { ok: true, pos: res.pos, value: [first.value, ...res.value] };
     };
 
+/**
+ * Pretty print error message.
+ * @param text parsed text
+ * @param failResult failed result
+ * @returns message to show
+ */
 const prettyPrintError = (text: string, failResult: FailResult) => {
   const { pos, expect } = failResult;
   const lines = text.split("\n");

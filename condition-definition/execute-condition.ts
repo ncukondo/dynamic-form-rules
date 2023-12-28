@@ -1,4 +1,5 @@
 import { type Condition, parseCondition, calcOperators } from "./parse-condition";
+import { type Operator, operators } from "./schema";
 
 type KeyValues = Record<string, string>;
 type Key<T extends KeyValues> = keyof T;
@@ -33,8 +34,8 @@ const evaluateCondition: <T extends KeyValues>(keyValues: T, condition: Conditio
   keyValues: T,
   condition: Condition,
 ) => {
-  const key: Condition = Object.keys(condition)[0] as keyof typeof condition;
-  const value = (key: keyof Condition) => condition[key];
+  const key: Operator = Object.keys(condition)[0] as Operator;
+  const value = <K extends Operator>(key: K) => condition[key as keyof Condition];
   switch (key) {
     case "and":
       return value(key).every((c) => evaluateCondition(keyValues, c));

@@ -49,17 +49,15 @@ type UnBoxTuple<T extends TupleBox<unknown>> = {
  * @param index Group index to return. Default is 0.
  * @returns result of reg.exec
  * @example
- * const parser = regParser(/([0-9]+) ([0-9]+)/, 1);
+ * const parser = regexp(/([0-9]+) ([0-9]+)/, 1);
  * parser("1 2", 0); // { ok: true, pos: 3, value: "1" }
  */
-const regParser: (reg: RegExp) => Parser<string> =
+const regexp: (reg: RegExp) => Parser<string> =
   (reg: RegExp, index = 0) => (text: string, pos: number) => {
     const regObj = new RegExp(reg.source, "ym");
     const match = text.substring(pos).match(regObj);
     if (match && match.length < index + 1) {
-      throw new Error(
-        `reg contains less group than expected: got "${reg.source}" index: ${index}`,
-      );
+      throw new Error(`reg contains less group than expected: got "${reg.source}" index: ${index}`);
     }
     return match !== null
       ? { ok: true, value: match[index], pos: pos + match[0].length }
@@ -69,13 +67,12 @@ const regParser: (reg: RegExp) => Parser<string> =
 /**
  * [Parser]Simple parser for a given string.
  * @param str string to parse
- * @returns
+ * @returns parser for the string
  */
-const stringParser: (str: string) => Parser<string> =
-  (str: string) => (text: string, pos: number) =>
-    text.startsWith(str, pos)
-      ? { ok: true, value: str, pos: pos + str.length }
-      : { ok: false, pos, expect: `"${str}"` };
+const string: (str: string) => Parser<string> = (str: string) => (text: string, pos: number) =>
+  text.startsWith(str, pos)
+    ? { ok: true, value: str, pos: pos + str.length }
+    : { ok: false, pos, expect: `"${str}"` };
 
 /**
  * [Parser]Parser that only succeeds at the end of the text.
@@ -85,9 +82,7 @@ const stringParser: (str: string) => Parser<string> =
  * parser("123", 0); // { ok: true, pos: 3, value: ["123", null] }
  */
 const eof: () => Parser<null> = () => (text: string, pos: number) =>
-  pos >= text.length
-    ? { ok: true, pos, value: null }
-    : { ok: false, pos, expect: "EOF" };
+  pos >= text.length ? { ok: true, pos, value: null } : { ok: false, pos, expect: "EOF" };
 
 // ------------------------------------------------------------
 // Parser combinator
@@ -177,9 +172,7 @@ const or: <T>(...parsers: [...Parser<T>[]]) => Parser<T> =
  * const parser = seq(regParser(/[0-9]/), regParser(/[0-9]/));
  * parser("12", 0); // { ok: true, pos: 2, value: ["1", "2"] }
  */
-const seq: <T extends readonly [...Parser<unknown>[]]>(
-  ...parsers: T
-) => Parser<UnBoxTuple<T>> =
+const seq: <T extends readonly [...Parser<unknown>[]]>(...parsers: T) => Parser<UnBoxTuple<T>> =
   <T extends readonly [...Parser<unknown>[]]>(...parsers: T) =>
   (text: string, pos: number) => {
     const value: UnBoxTuple<T>[number][] = [];
@@ -261,8 +254,7 @@ const peak: <T>(target: Parser<T>, followedBy: Parser<unknown>) => Parser<T> =
     const res = target(text, pos);
     if (!res.ok) return res;
     const res2 = followedBy(text, res.pos);
-    if (!res2.ok)
-      return { ok: false, pos, expect: `FollowedBy ${res2.expect}` };
+    if (!res2.ok) return { ok: false, pos, expect: `FollowedBy ${res2.expect}` };
     return res;
   };
 
@@ -277,11 +269,7 @@ const peak: <T>(target: Parser<T>, followedBy: Parser<unknown>) => Parser<T> =
  * parser("'123'", 0); // { ok: true, pos: 5, value: "123" }
  */
 const quoted =
-  <T>(
-    startQuote: Parser<unknown>,
-    parser: Parser<T>,
-    endQuote: Parser<unknown>,
-  ): Parser<T> =>
+  <T>(startQuote: Parser<unknown>, parser: Parser<T>, endQuote: Parser<unknown>): Parser<T> =>
   (text: string, pos: number) => {
     const res = startQuote(text, pos);
     if (!res.ok) return { ...res, pos };
@@ -327,9 +315,7 @@ const prettyPrintError = (text: string, failResult: FailResult) => {
   const lineHeader = `${`${line + 1}`.padStart(4, " ")} | `;
   const lineText = lineHeader + lines[line];
   const pointer = `${" ".repeat(column + 7)}^`;
-  return `[line:${line + 1},column:${
-    column + 1
-  }] Expect ${expect}\n${lineText}\n${pointer}`;
+  return `[line:${line + 1},column:${column + 1}] Expect ${expect}\n${lineText}\n${pointer}`;
 };
 
 export {
@@ -337,8 +323,8 @@ export {
   type Result,
   type OkResult,
   type FailResult,
-  regParser,
-  stringParser,
+  regexp,
+  string,
   map,
   or,
   assert,

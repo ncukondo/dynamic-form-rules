@@ -4,38 +4,66 @@ const label = z.string();
 const value = z.string();
 const labelValue = z.object({ label, value });
 const labelArrayValue = z.object({ label, value: z.array(value) });
-const eq = z.object({ eq: labelValue });
-const neq = z.object({ neq: labelValue });
-const in_ = z.object({ in: labelArrayValue });
-const notIn = z.object({ notIn: labelArrayValue });
-const includes = z.object({ includes: labelValue });
-const notIncludes = z.object({ notIncludes: labelValue });
-const matches = z.object({ matches: labelValue });
-const notMatches = z.object({ notMatches: labelValue });
-const unit = z.union([eq, neq, in_, notIn, includes, notIncludes, matches, notMatches]);
+const equals = z.object({ type: z.literal("equals"), label, value });
+const notEquals = z.object({ type: z.literal("notEquals"), label, value });
+const in_ = z.object({ type: z.literal("in"), label, value: z.array(value) });
+const notIn = z.object({ type: z.literal("notIn"), label, value: z.array(value) });
+const includes = z.object({ type: z.literal("includes"), label, value });
+const notIncludes = z.object({ type: z.literal("notIncludes"), label, value });
+const matches = z.object({ type: z.literal("matches"), label, value });
+const notMatches = z.object({ type: z.literal("notMatches"), label, value });
+const not = z.object({
+  type: z.literal("not"),
+  child: z.union([
+    equals,
+    notEquals,
+    in_,
+    notIn,
+    includes,
+    notIncludes,
+    matches,
+    notMatches,
+    z.lazy(() => and),
+    z.lazy(() => or),
+  ]),
+});
+const unit = z.union([
+  equals,
+  notEquals,
+  in_,
+  notIn,
+  includes,
+  notIncludes,
+  matches,
+  notMatches,
+  not,
+]);
 
 const and: z.ZodType<And> = z.object({
-  and: z.array(z.union([unit, z.lazy(() => and), z.lazy(() => or)])),
+  type: z.literal("and"),
+  children: z.array(z.union([unit, z.lazy(() => and), z.lazy(() => or)])),
 });
 const or: z.ZodType<Or> = z.object({
-  or: z.array(z.union([unit, z.lazy(() => and), z.lazy(() => or)])),
+  type: z.literal("or"),
+  children: z.array(z.union([unit, z.lazy(() => and), z.lazy(() => or)])),
 });
 const condition = z.union([and, or, unit]);
 
 type Label = z.infer<typeof label>;
 type Value = z.infer<typeof value>;
-type Eq = z.infer<typeof eq>;
-type Neq = z.infer<typeof neq>;
+type Equals = z.infer<typeof equals>;
+type NotEquals = z.infer<typeof notEquals>;
 type In = z.infer<typeof in_>;
 type NotIn = z.infer<typeof notIn>;
 type Includes = z.infer<typeof includes>;
 type NotIncludes = z.infer<typeof notIncludes>;
 type Matches = z.infer<typeof matches>;
 type NotMatches = z.infer<typeof notMatches>;
+type Not = z.infer<typeof not>;
 type Unit = z.infer<typeof unit>;
 
-type And = { and: Array<Unit | And | Or> };
-type Or = { or: Array<Unit | And | Or> };
+type And = { type: "and"; children: Array<Unit | And | Or> };
+type Or = { type: "or"; children: Array<Unit | And | Or> };
 type Condition = z.infer<typeof condition>;
 
 const calcOperators = [
@@ -45,18 +73,18 @@ const calcOperators = [
   "notIncludes",
   "matches",
   "notMatches",
-  "eq",
-  "neq",
+  "equals",
+  "notEquals",
 ] as const;
 
-const operators = ["and", "or", ...calcOperators] as const;
+const operators = ["and", "or", "not", ...calcOperators] as const;
 type Operator = (typeof operators)[number];
 
 export {
   type Label,
   type Value,
-  type Eq,
-  type Neq,
+  type Equals as Eq,
+  type NotEquals as Neq,
   type In,
   type NotIn,
   type Includes,
@@ -66,6 +94,7 @@ export {
   type Unit,
   type And,
   type Or,
+  type Not,
   type Condition,
   type Operator,
   operators,
@@ -75,8 +104,8 @@ export {
   value,
   labelValue,
   labelArrayValue,
-  eq,
-  neq,
+  equals,
+  notEquals,
   in_,
   notIn,
   includes,
@@ -86,4 +115,5 @@ export {
   unit,
   and,
   or,
+  not,
 };

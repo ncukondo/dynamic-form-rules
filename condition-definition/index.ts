@@ -5,4 +5,4 @@ export {
   type KeyValues,
 } from "./condition-runner";
 export { safeParseSource } from "./condition-source-parser";
-export { safeParseObject } from "./schema";
+export { safeParseObject, type Condition } from "./schema";

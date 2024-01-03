@@ -1,4 +1,6 @@
 /**
+ * Simple parser for domain specific language(DSL) of condition definition.
+ *
  * parse rule like
  *  `
  *    (key1=1 or key2<>2) or

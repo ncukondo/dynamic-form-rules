@@ -1,43 +1,33 @@
 import { expect, test, describe } from "bun:test";
-import {
-  evaluateCondition,
-  extractDependentKeys,
-  evaluateConditionDict,
-} from "../condition-runner";
+import { evaluateRule, extractDependentKeys, evaluateRuleDict } from "../rule-runner";
 
-describe("evaluateCondition", () => {
+describe("evaluateRule", () => {
   test("equals: [ok]", () => {
     const keyValues = {
       label1: "1",
     };
-    expect(evaluateCondition(keyValues, { type: "equals", key: "label1", value: "1" })).toEqual(
-      true,
-    );
+    expect(evaluateRule(keyValues, { type: "equals", key: "label1", value: "1" })).toEqual(true);
   });
 
   test("equals: [fail]", () => {
     const keyValues = {
       label1: "1",
     };
-    expect(evaluateCondition(keyValues, { type: "equals", key: "label1", value: "2" })).toEqual(
-      false,
-    );
+    expect(evaluateRule(keyValues, { type: "equals", key: "label1", value: "2" })).toEqual(false);
   });
 
   test("notEquals: [ok]", () => {
     const keyValues = {
       label1: "1",
     };
-    expect(evaluateCondition(keyValues, { type: "notEquals", key: "label1", value: "2" })).toEqual(
-      true,
-    );
+    expect(evaluateRule(keyValues, { type: "notEquals", key: "label1", value: "2" })).toEqual(true);
   });
 
   test("notEquals: [fail]", () => {
     const keyValues = {
       label1: "1",
     };
-    expect(evaluateCondition(keyValues, { type: "notEquals", key: "label1", value: "1" })).toEqual(
+    expect(evaluateRule(keyValues, { type: "notEquals", key: "label1", value: "1" })).toEqual(
       false,
     );
   });
@@ -46,16 +36,16 @@ describe("evaluateCondition", () => {
     const keyValues = {
       label1: "1",
     };
-    expect(
-      evaluateCondition(keyValues, { type: "in", key: "label1", value: ["1", "2", "3"] }),
-    ).toEqual(true);
+    expect(evaluateRule(keyValues, { type: "in", key: "label1", value: ["1", "2", "3"] })).toEqual(
+      true,
+    );
   });
 
   test("in: [fail]", () => {
     const keyValues = {
       label1: "1",
     };
-    expect(evaluateCondition(keyValues, { type: "in", key: "label1", value: ["2", "3"] })).toEqual(
+    expect(evaluateRule(keyValues, { type: "in", key: "label1", value: ["2", "3"] })).toEqual(
       false,
     );
   });
@@ -64,9 +54,9 @@ describe("evaluateCondition", () => {
     const keyValues = {
       label1: "1",
     };
-    expect(
-      evaluateCondition(keyValues, { type: "notIn", key: "label1", value: ["2", "3"] }),
-    ).toEqual(true);
+    expect(evaluateRule(keyValues, { type: "notIn", key: "label1", value: ["2", "3"] })).toEqual(
+      true,
+    );
   });
 
   test("notIn: [fail]", () => {
@@ -74,7 +64,7 @@ describe("evaluateCondition", () => {
       label1: "1",
     };
     expect(
-      evaluateCondition(keyValues, { type: "notIn", key: "label1", value: ["1", "2", "3"] }),
+      evaluateRule(keyValues, { type: "notIn", key: "label1", value: ["1", "2", "3"] }),
     ).toEqual(false);
   });
 
@@ -82,45 +72,41 @@ describe("evaluateCondition", () => {
     const keyValues = {
       label1: "123",
     };
-    expect(evaluateCondition(keyValues, { type: "includes", key: "label1", value: "2" })).toEqual(
-      true,
-    );
+    expect(evaluateRule(keyValues, { type: "includes", key: "label1", value: "2" })).toEqual(true);
   });
 
   test("includes: [fail]", () => {
     const keyValues = {
       label1: "123",
     };
-    expect(evaluateCondition(keyValues, { type: "includes", key: "label1", value: "4" })).toEqual(
-      false,
-    );
+    expect(evaluateRule(keyValues, { type: "includes", key: "label1", value: "4" })).toEqual(false);
   });
 
   test("notIncludes: [ok]", () => {
     const keyValues = {
       label1: "123",
     };
-    expect(
-      evaluateCondition(keyValues, { type: "notIncludes", key: "label1", value: "4" }),
-    ).toEqual(true);
+    expect(evaluateRule(keyValues, { type: "notIncludes", key: "label1", value: "4" })).toEqual(
+      true,
+    );
   });
 
   test("notIncludes: [fail]", () => {
     const keyValues = {
       label1: "123",
     };
-    expect(
-      evaluateCondition(keyValues, { type: "notIncludes", key: "label1", value: "2" }),
-    ).toEqual(false);
+    expect(evaluateRule(keyValues, { type: "notIncludes", key: "label1", value: "2" })).toEqual(
+      false,
+    );
   });
 
   test("matches: [ok]", () => {
     const keyValues = {
       label1: "label1",
     };
-    expect(
-      evaluateCondition(keyValues, { type: "matches", key: "label1", value: "label\\d+" }),
-    ).toEqual(true);
+    expect(evaluateRule(keyValues, { type: "matches", key: "label1", value: "label\\d+" })).toEqual(
+      true,
+    );
   });
 
   test("matches: [fail]", () => {
@@ -128,7 +114,7 @@ describe("evaluateCondition", () => {
       label1: "label1",
     };
     expect(
-      evaluateCondition(keyValues, { type: "matches", key: "label1", value: "label[A-Za-z]+" }),
+      evaluateRule(keyValues, { type: "matches", key: "label1", value: "label[A-Za-z]+" }),
     ).toEqual(false);
   });
 
@@ -138,7 +124,7 @@ describe("evaluateCondition", () => {
       label2: "2",
     };
     expect(
-      evaluateCondition(keyValues, {
+      evaluateRule(keyValues, {
         type: "and",
         children: [
           { type: "equals", key: "label1", value: "1" },
@@ -154,7 +140,7 @@ describe("evaluateCondition", () => {
       label2: "2",
     };
     expect(
-      evaluateCondition(keyValues, {
+      evaluateRule(keyValues, {
         type: "and",
         children: [
           { type: "equals", key: "label1", value: "1" },
@@ -170,7 +156,7 @@ describe("evaluateCondition", () => {
       label2: "2",
     };
     expect(
-      evaluateCondition(keyValues, {
+      evaluateRule(keyValues, {
         type: "or",
         children: [
           { type: "equals", key: "label1", value: "1" },
@@ -186,7 +172,7 @@ describe("evaluateCondition", () => {
       label2: "2",
     };
     expect(
-      evaluateCondition(keyValues, {
+      evaluateRule(keyValues, {
         type: "or",
         children: [
           { type: "equals", key: "label1", value: "2" },
@@ -201,7 +187,7 @@ describe("evaluateCondition", () => {
       label1: "1",
     };
     expect(
-      evaluateCondition(keyValues, {
+      evaluateRule(keyValues, {
         type: "not",
         child: { type: "equals", key: "label1", value: "2" },
       }),
@@ -274,7 +260,7 @@ describe("extractDependentKeys", () => {
   });
 });
 
-describe("evaluateConditionDict", () => {
+describe("evaluateRuleDict", () => {
   test("all ok", () => {
     const keyValues = {
       label1: "1",
@@ -284,7 +270,7 @@ describe("evaluateConditionDict", () => {
       label1: { type: "equals", key: "label2", value: "2" },
       label2: { type: "equals", key: "label1", value: "1" },
     } as const;
-    expect(evaluateConditionDict(keyValues, conditionDict)).toEqual({
+    expect(evaluateRuleDict(keyValues, conditionDict)).toEqual({
       ok: ["label1", "label2"],
       fail: [],
       undefined: [],
@@ -300,7 +286,7 @@ describe("evaluateConditionDict", () => {
       label1: { type: "equals", key: "label2", value: "3" },
       label2: { type: "equals", key: "label1", value: "2" },
     } as const;
-    expect(evaluateConditionDict(keyValues, conditionDict)).toEqual({
+    expect(evaluateRuleDict(keyValues, conditionDict)).toEqual({
       ok: [],
       fail: ["label1", "label2"],
       undefined: [],
@@ -316,7 +302,7 @@ describe("evaluateConditionDict", () => {
       label1: { type: "equals", key: "label1", value: "1" },
       label2: { type: "equals", key: "label2", value: "1" },
     } as const;
-    expect(evaluateConditionDict(keyValues, conditionDict)).toEqual({
+    expect(evaluateRuleDict(keyValues, conditionDict)).toEqual({
       ok: ["label1"],
       fail: ["label2"],
       undefined: [],
@@ -333,7 +319,7 @@ describe("evaluateConditionDict", () => {
       label1: { type: "equals", key: "label3", value: "3" },
       label2: { type: "equals", key: "label2", value: "1" },
     } as const;
-    expect(evaluateConditionDict(keyValues, conditionDict)).toEqual({
+    expect(evaluateRuleDict(keyValues, conditionDict)).toEqual({
       ok: ["label1"],
       fail: ["label2"],
       undefined: ["label3"],
@@ -349,7 +335,7 @@ describe("evaluateConditionDict", () => {
       label1: { type: "equals", key: "label2", value: "2" },
       label2: { type: "equals", key: "label2", value: "1" },
     } as const;
-    expect(evaluateConditionDict(keyValues, conditionDict)).toEqual({
+    expect(evaluateRuleDict(keyValues, conditionDict)).toEqual({
       ok: [],
       fail: ["label1", "label2"],
       undefined: [],
@@ -369,7 +355,7 @@ describe("evaluateConditionDict", () => {
     const extraDependentKeys = {
       label3: ["label1"],
     };
-    expect(evaluateConditionDict(keyValues, conditionDict, extraDependentKeys)).toEqual({
+    expect(evaluateRuleDict(keyValues, conditionDict, extraDependentKeys)).toEqual({
       ok: ["label2"],
       fail: ["label1", "label3"],
       undefined: [],

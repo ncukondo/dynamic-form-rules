@@ -1,4 +1,4 @@
-import { type Condition } from "./schema";
+import { type Rule } from "./schema";
 
 type KeyValues = Record<string, string>;
 type Key<T extends KeyValues> = keyof T;
@@ -9,68 +9,68 @@ type Dependencies<T extends KeyValues> = {
   [K in Key<T>]?: Key<T>[];
 };
 type ConditionDict<T extends KeyValues> = {
-  [K in Key<T>]?: Condition;
+  [K in Key<T>]?: Rule;
 };
 type PartialKey<T extends Record<string, unknown>> = (keyof T)[][number];
 
-const evaluateCondition = <T extends KeyValues>(keyValues: T, condition: Condition): boolean => {
-  const type = condition.type;
+const evaluateRule = <T extends KeyValues>(keyValues: T, rule: Rule): boolean => {
+  const type = rule.type;
   switch (type) {
     case "and":
-      return condition.children.every((child) => evaluateCondition(keyValues, child));
+      return rule.children.every((child) => evaluateRule(keyValues, child));
     case "or":
-      return condition.children.some((child) => evaluateCondition(keyValues, child));
+      return rule.children.some((child) => evaluateRule(keyValues, child));
     case "not":
-      return !evaluateCondition(keyValues, condition.child);
+      return !evaluateRule(keyValues, rule.child);
     case "equals":
-      return keyValues[condition.key] === condition.value;
+      return keyValues[rule.key] === rule.value;
     case "notEquals":
-      return keyValues[condition.key] !== condition.value;
+      return keyValues[rule.key] !== rule.value;
     case "in":
-      return condition.value.includes(keyValues[condition.key]);
+      return rule.value.includes(keyValues[rule.key]);
     case "notIn":
-      return !condition.value.includes(keyValues[condition.key]);
+      return !rule.value.includes(keyValues[rule.key]);
     case "includes":
-      return keyValues[condition.key].includes(condition.value);
+      return keyValues[rule.key].includes(rule.value);
     case "notIncludes":
-      return !keyValues[condition.key].includes(condition.value);
+      return !keyValues[rule.key].includes(rule.value);
     case "matches":
-      return new RegExp(condition.value).test(keyValues[condition.key]);
+      return new RegExp(rule.value).test(keyValues[rule.key]);
     case "notMatches":
-      return !new RegExp(condition.value).test(keyValues[condition.key]);
+      return !new RegExp(rule.value).test(keyValues[rule.key]);
     default:
       throw new Error(`unknown condition type: ${type}`);
   }
 };
 
-const extractDependentKeys = (condition: Condition): string[] => {
+const extractDependentKeys = (rule: Rule): string[] => {
   const removeDuplicates = <T>(array: T[]): T[] => [...new Set(array)];
-  const type = condition.type;
+  const type = rule.type;
   switch (type) {
     case "and":
-      return removeDuplicates(condition.children.flatMap(extractDependentKeys));
+      return removeDuplicates(rule.children.flatMap(extractDependentKeys));
     case "or":
-      return removeDuplicates(condition.children.flatMap(extractDependentKeys));
+      return removeDuplicates(rule.children.flatMap(extractDependentKeys));
     case "not":
-      return extractDependentKeys(condition.child);
+      return extractDependentKeys(rule.child);
     default:
-      if ("key" in condition) {
-        return Array.isArray(condition.key) ? [...condition.key] : [condition.key];
+      if ("key" in rule) {
+        return Array.isArray(rule.key) ? [...rule.key] : [rule.key];
       }
       throw new Error(`unknown condition type: ${type}`);
   }
 };
 
-type EvaluateConditionDictResult<T extends KeyValues> = {
+type EvaluateRuleResult<T extends KeyValues> = {
   ok: (keyof T)[];
   fail: (keyof T)[];
   undefined: (keyof T)[];
 };
-const evaluateConditionDict = <T extends KeyValues>(
+const evaluateRuleDict = <T extends KeyValues>(
   keyValues: T,
   conditionDict: ConditionDict<T>,
   dependencies: Record<string, string[]> = {},
-): EvaluateConditionDictResult<T> => {
+): EvaluateRuleResult<T> => {
   const combinedDependencies = {
     ...dependencies,
     ...Object.fromEntries(
@@ -86,7 +86,7 @@ const evaluateConditionDict = <T extends KeyValues>(
     Object.keys(keyValues).map((key: keyof T) => {
       const condition = conditionDict[key];
       if (condition === undefined) return [key, "undefined"];
-      const result = evaluateCondition(keyValues, condition);
+      const result = evaluateRule(keyValues, condition);
       return [key, result ? "ok" : "fail"];
     }),
   ) as ResultDict;
@@ -112,8 +112,8 @@ const evaluateConditionDict = <T extends KeyValues>(
 };
 
 export {
-  evaluateCondition,
-  evaluateConditionDict,
+  evaluateRule,
+  evaluateRuleDict,
   extractDependentKeys,
   type KeyValues,
   type Key,

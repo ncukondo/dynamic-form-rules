@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { safeParseSource, complexKey } from "../condition-source-parser";
+import { safeParseSource } from "../source-parser";
 
 test("in operator", () => {
   const condition = safeParseSource("label1 in [1,2,3]");

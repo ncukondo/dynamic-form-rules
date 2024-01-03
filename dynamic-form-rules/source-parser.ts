@@ -1,5 +1,5 @@
 /**
- * Simple parser for domain specific language(DSL) of condition definition.
+ * Simple parser for domain specific language(DSL) of dynamic form rule definition.
  *
  * parse rule like
  *  `
@@ -60,7 +60,7 @@ import {
   peak,
 } from "./simple-parser";
 import {
-  type Condition,
+  type Rule,
   type And,
   type Or,
   type Unit,
@@ -180,24 +180,20 @@ const andUnit = lazy<And>(() =>
   })),
 );
 const orUnit: Parser<Or> = lazy<Or>(() =>
-  map(sepByAtLeast(or<Condition>(andUnit, parenthesizedUnit, baseUnit), or_, 2), (ands) => ({
+  map(sepByAtLeast(or<Rule>(andUnit, parenthesizedUnit, baseUnit), or_, 2), (ands) => ({
     type: "or" as const,
     children: ands,
   })),
 );
-const parenthesizedUnit: Parser<Condition> = lazy<Condition>(() =>
-  quoted(lParen, or<Condition>(parenthesizedUnit, andUnit, orUnit, baseUnit), rParen),
-);
-const parenthesized_unit: Parser<Condition> = lazy<Condition>(() =>
-  quoted(lParen, or<Condition>(parenthesized_unit, andUnit, orUnit, baseUnit), rParen),
-);
-const unit: Parser<Condition> = lazy<Condition>(() =>
-  or<Condition>(orUnit, andUnit, baseUnit, parenthesizedUnit),
+const parenthesizedUnit: Parser<Rule> = lazy<Rule>(() =>
+  quoted(lParen, or<Rule>(parenthesizedUnit, andUnit, orUnit, baseUnit), rParen),
 );
 
-const condition: Parser<Condition> = quoted(white, unit, white);
+const unit: Parser<Rule> = lazy<Rule>(() => or<Rule>(orUnit, andUnit, baseUnit, parenthesizedUnit));
+
+const condition: Parser<Rule> = quoted(white, unit, white);
 
 const safeParseSource = (input: string) => skipSecond(condition, eof())(input, 0);
 
-export { safeParseSource, calcOperators, type Condition };
-export { baseUnit, andUnit, orUnit, parenthesized_unit, unit, condition, complexKey };
+export { safeParseSource, calcOperators, type Rule as Condition };
+export { baseUnit, andUnit, orUnit, unit, condition, complexKey };

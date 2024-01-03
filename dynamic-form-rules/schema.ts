@@ -34,7 +34,7 @@ const or: z.ZodType<Or> = z.object({
   type: z.literal("or"),
   children: z.array(z.union([unit, z.lazy(() => and), z.lazy(() => or)])),
 });
-const condition = z.union([and, or, unit]);
+const rule = z.union([and, or, unit]);
 
 type Key = z.infer<typeof key>;
 type Value = z.infer<typeof value>;
@@ -51,7 +51,7 @@ type Unit = z.infer<typeof unit>;
 type Not = { type: "not"; child: Unit | And | Or };
 type And = { type: "and"; children: ReadonlyArray<Unit | And | Or> };
 type Or = { type: "or"; children: ReadonlyArray<Unit | And | Or> };
-type Condition = Readonly<z.infer<typeof condition>>;
+type Rule = Readonly<z.infer<typeof rule>>;
 
 const calcOperators = [
   "in",
@@ -69,7 +69,7 @@ type Operator = (typeof operators)[number];
 type CalcOperator = (typeof calcOperators)[number];
 
 const safeParseObject = (input: unknown) => {
-  const res = condition.safeParse(input);
+  const res = rule.safeParse(input);
   const { success: ok } = res;
   return ok ? { ok, value: res.data } : { ok, error: res.error };
 };
@@ -89,7 +89,7 @@ export {
   type And,
   type Or,
   type Not,
-  type Condition,
+  type Rule,
   type Operator,
   type CalcOperator,
   calcOperators,

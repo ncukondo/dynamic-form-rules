@@ -35,8 +35,9 @@ interface Parser<T> {
 // Utility types (mainly for seq function)
 type Box<T> = Parser<T>;
 type TupleBox<T> = { [P in keyof T]: Box<T[P]> };
-type UnBoxTuple<T extends TupleBox<unknown>> = { [P in keyof T]: T[P] extends Box<infer U> ? U : never };
-
+type UnBoxTuple<T extends TupleBox<unknown>> = {
+  [P in keyof T]: T[P] extends Box<infer U> ? U : never;
+};
 
 // ------------------------------------------------------------
 // Parser functions
@@ -48,17 +49,15 @@ type UnBoxTuple<T extends TupleBox<unknown>> = { [P in keyof T]: T[P] extends Bo
  * @param index Group index to return. Default is 0.
  * @returns result of reg.exec
  * @example
- * const parser = regParser(/([0-9]+) ([0-9]+)/, 1);
+ * const parser = regexp(/([0-9]+) ([0-9]+)/, 1);
  * parser("1 2", 0); // { ok: true, pos: 3, value: "1" }
  */
-const regParser: (reg: RegExp) => Parser<string> =
+const regexp: (reg: RegExp) => Parser<string> =
   (reg: RegExp, index = 0) => (text: string, pos: number) => {
     const regObj = new RegExp(reg.source, "ym");
     const match = text.substring(pos).match(regObj);
     if (match && match.length < index + 1) {
-      throw new Error(
-        `reg contains less group than expected: got "${reg.source}" index: ${index}`,
-      );
+      throw new Error(`reg contains less group than expected: got "${reg.source}" index: ${index}`);
     }
     return match !== null
       ? { ok: true, value: match[index], pos: pos + match[0].length }
@@ -68,13 +67,12 @@ const regParser: (reg: RegExp) => Parser<string> =
 /**
  * [Parser]Simple parser for a given string.
  * @param str string to parse
- * @returns 
+ * @returns parser for the string
  */
-const stringParser: (str: string) => Parser<string> =
-  (str: string) => (text: string, pos: number) =>
-    text.startsWith(str, pos)
-      ? { ok: true, value: str, pos: pos + str.length }
-      : { ok: false, pos, expect: `"${str}"` };
+const string: (str: string) => Parser<string> = (str: string) => (text: string, pos: number) =>
+  text.startsWith(str, pos)
+    ? { ok: true, value: str, pos: pos + str.length }
+    : { ok: false, pos, expect: `"${str}"` };
 
 /**
  * [Parser]Parser that only succeeds at the end of the text.
@@ -101,14 +99,18 @@ const eof: () => Parser<null> = () => (text: string, pos: number) =>
  * parser("1", 0); // { ok: true, pos: 1, value: "1" }
  * parser("2", 0); // { ok: false, pos: 0, message: "should be 1" }
  */
-const assert = <T>(parser: Parser<T>, condition: (value: T) => boolean, expect: string): Parser<T> => {
+const assert = <T>(
+  parser: Parser<T>,
+  condition: (value: T) => boolean,
+  expect: string,
+): Parser<T> => {
   return (text: string, pos: number) => {
     const res = parser(text, pos);
     if (!res.ok) return res;
     if (!condition(res.value)) return { ok: false, pos, expect };
     return res;
   };
-}
+};
 
 /**
  * [Combinator]Create a parser that is not evaluated until it is used.
@@ -124,8 +126,7 @@ const lazy = <T>(parserFactory: () => Parser<T>): Parser<T> => {
     if (cached === null) cached = parserFactory();
     return cached(text, pos);
   };
-}
-
+};
 
 /**
  * [Combinator]Transform the result of a parser.
@@ -138,10 +139,10 @@ const lazy = <T>(parserFactory: () => Parser<T>): Parser<T> => {
  */
 const map: <T, U>(parser: Parser<T>, f: (value: T) => U) => Parser<U> =
   <T, U>(parser: Parser<T>, f: (value: T) => U) =>
-    (text: string, pos: number) => {
-      const res = parser(text, pos);
-      return res.ok ? { ok: true, pos: res.pos, value: f(res.value) } : res;
-    };
+  (text: string, pos: number) => {
+    const res = parser(text, pos);
+    return res.ok ? { ok: true, pos: res.pos, value: f(res.value) } : res;
+  };
 
 /**
  * [Combinator]Combine parsers. Try each parser in the list until one succeeds.
@@ -152,7 +153,8 @@ const map: <T, U>(parser: Parser<T>, f: (value: T) => U) => Parser<U> =
  * parser("z", 0); // { ok: true, pos: 1, value: "z" }
  */
 const or: <T>(...parsers: [...Parser<T>[]]) => Parser<T> =
-  <T>(...parsers: [...Parser<T>[]]) => (text: string, pos: number) => {
+  <T>(...parsers: [...Parser<T>[]]) =>
+  (text: string, pos: number) => {
     const messages: string[] = [];
     for (const parser of parsers) {
       const res = parser(text, pos);
@@ -171,18 +173,18 @@ const or: <T>(...parsers: [...Parser<T>[]]) => Parser<T> =
  * parser("12", 0); // { ok: true, pos: 2, value: ["1", "2"] }
  */
 const seq: <T extends readonly [...Parser<unknown>[]]>(...parsers: T) => Parser<UnBoxTuple<T>> =
-  <T extends readonly [...Parser<unknown>[]]>(...parsers: T) => (text: string, pos: number) => {
-    const value: any[] = [];
+  <T extends readonly [...Parser<unknown>[]]>(...parsers: T) =>
+  (text: string, pos: number) => {
+    const value: UnBoxTuple<T>[number][] = [];
     let currentPos = pos;
     for (const parser of parsers) {
       const res = parser(text, currentPos);
       if (!res.ok) return { ok: false, pos: currentPos, expect: res.expect };
       currentPos = res.pos;
-      value.push(res.value);
+      value.push(res.value as UnBoxTuple<T>[number]);
     }
     return { ok: true, pos: currentPos, value: value as UnBoxTuple<T> };
   };
-
 
 /**
  * [Combinator]Apply a parser repeatedly until it fails.
@@ -193,7 +195,8 @@ const seq: <T extends readonly [...Parser<unknown>[]]>(...parsers: T) => Parser<
  * parser("123", 0); // { ok: true, pos: 3, value: ["1", "2", "3"] }
  */
 const many: <T>(parser: Parser<T>) => Parser<T[]> =
-  <T>(parser: Parser<T>) => (text: string, pos: number) => {
+  <T>(parser: Parser<T>) =>
+  (text: string, pos: number) => {
     const value: T[] = [];
     let currentPos = pos;
     while (true) {
@@ -216,27 +219,27 @@ const many: <T>(parser: Parser<T>) => Parser<T[]> =
  */
 const skipFirst: <T>(first: Parser<unknown>, second: Parser<T>) => Parser<T> =
   <T>(first: Parser<unknown>, second: Parser<T>) =>
-    (text: string, pos: number) => {
-      const res = first(text, pos);
-      return res.ok ? second(text, res.pos) : res;
-    };
+  (text: string, pos: number) => {
+    const res = first(text, pos);
+    return res.ok ? second(text, res.pos) : res;
+  };
 
 /**
  * [Combinator]Apply two parsers and return the result of the first parser.
  * @param first first parser to apply
  * @param second second parser to apply (ignored)
- * @returns 
+ * @returns
  */
 const skipSecond: <T>(first: Parser<T>, second: Parser<unknown>) => Parser<T> =
   <T>(first: Parser<T>, second: Parser<unknown>) =>
-    (text: string, pos: number) => {
-      const res = first(text, pos);
-      if (!res.ok) return res;
-      const res2 = second(text, res.pos);
-      return res2.ok
-        ? { ok: true, pos: res2.pos, value: res.value }
-        : { ok: false, pos: res2.pos, expect: res2.expect };
-    };
+  (text: string, pos: number) => {
+    const res = first(text, pos);
+    if (!res.ok) return res;
+    const res2 = second(text, res.pos);
+    return res2.ok
+      ? { ok: true, pos: res2.pos, value: res.value }
+      : { ok: false, pos: res2.pos, expect: res2.expect };
+  };
 
 /**
  * [Combinator]check if target parser succeeds and followedBy parser also succeeds.
@@ -247,29 +250,26 @@ const skipSecond: <T>(first: Parser<T>, second: Parser<unknown>) => Parser<T> =
  */
 const peak: <T>(target: Parser<T>, followedBy: Parser<unknown>) => Parser<T> =
   <T>(target: Parser<T>, followedBy: Parser<unknown>) =>
-    (text: string, pos: number) => {
-      const res = target(text, pos);
-      if (!res.ok) return res;
-      const res2 = followedBy(text, res.pos);
-      if (!res2.ok) return { ok: false, pos, expect: `FollowedBy ${res2.expect}` };
-      return res;
-    };
+  (text: string, pos: number) => {
+    const res = target(text, pos);
+    if (!res.ok) return res;
+    const res2 = followedBy(text, res.pos);
+    if (!res2.ok) return { ok: false, pos, expect: `FollowedBy ${res2.expect}` };
+    return res;
+  };
 
 /**
  * [Combinator]Apply three parsers and return the result of the middle parser.
  * @param startQuote first parser to apply(ignored)
- * @param parser second parser to apply 
+ * @param parser second parser to apply
  * @param endQuote third parser to apply(ignored)
  * @returns parser result of second parser
  * @example
  * const parser = quoted(stringParser("'"), regParser(/[0-9]+/), stringParser("'"));
  * parser("'123'", 0); // { ok: true, pos: 5, value: "123" }
  */
-const quoted = <T>(
-  startQuote: Parser<unknown>,
-  parser: Parser<T>,
-  endQuote: Parser<unknown>,
-): Parser<T> =>
+const quoted =
+  <T>(startQuote: Parser<unknown>, parser: Parser<T>, endQuote: Parser<unknown>): Parser<T> =>
   (text: string, pos: number) => {
     const res = startQuote(text, pos);
     if (!res.ok) return { ...res, pos };
@@ -288,21 +288,18 @@ const quoted = <T>(
  * @example
  * const parser = sepBy(regParser(/[0-9]+/), stringParser(","));
  * parser("1,2,3", 0); // { ok: true, pos: 5, value: ["1", "2", "3"] }
-*/
+ */
 const sepBy: <T>(parser: Parser<T>, sep: Parser<unknown>) => Parser<T[]> =
   <T>(parser: Parser<T>, sep: Parser<unknown>) =>
-    (
-      text: string,
-      pos: number,
-    ) => {
-      const first = parser(text, pos);
-      if (!first.ok) return first;
-      const unit = skipFirst(sep, parser);
-      const units = many(unit);
-      const res = units(text, first.pos);
-      if (!res.ok) return res;
-      return { ok: true, pos: res.pos, value: [first.value, ...res.value] };
-    };
+  (text: string, pos: number) => {
+    const first = parser(text, pos);
+    if (!first.ok) return first;
+    const unit = skipFirst(sep, parser);
+    const units = many(unit);
+    const res = units(text, first.pos);
+    if (!res.ok) return res;
+    return { ok: true, pos: res.pos, value: [first.value, ...res.value] };
+  };
 
 /**
  * Pretty print error message.
@@ -313,21 +310,21 @@ const sepBy: <T>(parser: Parser<T>, sep: Parser<unknown>) => Parser<T[]> =
 const prettyPrintError = (text: string, failResult: FailResult) => {
   const { pos, expect } = failResult;
   const lines = text.split("\n");
-  const line = lines.findIndex(line => pos < line.length);
+  const line = lines.findIndex((line) => pos < line.length);
   const column = pos - lines.slice(0, line).join("\n").length;
-  const lineHeader = `${line + 1}`.padStart(4, " ") + " | ";
+  const lineHeader = `${`${line + 1}`.padStart(4, " ")} | `;
   const lineText = lineHeader + lines[line];
-  const pointer = " ".repeat(column + 7) + "^";
+  const pointer = `${" ".repeat(column + 7)}^`;
   return `[line:${line + 1},column:${column + 1}] Expect ${expect}\n${lineText}\n${pointer}`;
-}
+};
 
 export {
   type Parser,
   type Result,
   type OkResult,
   type FailResult,
-  regParser,
-  stringParser,
+  regexp,
+  string,
   map,
   or,
   assert,
@@ -341,4 +338,4 @@ export {
   eof,
   peak,
   prettyPrintError,
-}
+};

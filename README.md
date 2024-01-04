@@ -11,4 +11,3 @@ or
 ```bash
 yarn add dynamic-form-rules
 ```
-

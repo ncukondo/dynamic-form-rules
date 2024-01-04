@@ -1,15 +1,14 @@
-# condition-definition-dsl
+# Dynamic Form Rules
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
+To install:
 
 ```bash
-bun run index.ts
+npm install dynamic-form-rules
 ```
 
-This project was created using `bun init` in bun v1.0.18. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+or
+
+```bash
+yarn add dynamic-form-rules
+```
+

@@ -16,7 +16,8 @@
   "scripts": {
     "build": "vite build && tsc",
     "test": "vitest",
-    "version": "changeset version"
+    "version": "changeset version",
+    "publish": "changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
@@ -29,6 +30,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "valibot": "^0.25.0",
     "zod": "^3.22.4"
   }
 }

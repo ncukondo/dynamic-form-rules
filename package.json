@@ -3,9 +3,12 @@
   "type": "module",
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
+  "types": "./types/index.d.ts",
   "version": "0.0.1",
   "files": [
-    "dist"
+    "dist",
+    "types",
+    "src"
   ],
   "exports": {
     ".": {

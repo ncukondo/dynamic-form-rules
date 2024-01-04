@@ -10,7 +10,7 @@
     "allowImportingTsExtensions": true,
     "emitDeclarationOnly": true,
     "declaration": true,
-    "declarationDir": "./dist",
+    "declarationDir": "./types",
     "composite": true,
     "strict": true,
     "downlevelIteration": true,

@@ -1,21 +1,21 @@
-import { z } from "zod";
+import * as v from "valibot";
 
-const key = z.string();
-const value = z.string();
-const equals = z.object({ type: z.literal("equals"), key, value });
-const notEquals = z.object({ type: z.literal("notEquals"), key, value });
-const in_ = z.object({ type: z.literal("in"), key, value: z.array(value) });
-const notIn = z.object({ type: z.literal("notIn"), key, value: z.array(value) });
-const includes = z.object({ type: z.literal("includes"), key, value });
-const notIncludes = z.object({ type: z.literal("notIncludes"), key, value });
-const matches = z.object({ type: z.literal("matches"), key, value });
-const notMatches = z.object({ type: z.literal("notMatches"), key, value });
+const key = v.string();
+const value = v.string();
+const equals = v.object({ type: v.literal("equals"), key, value });
+const notEquals = v.object({ type: v.literal("notEquals"), key, value });
+const in_ = v.object({ type: v.literal("in"), key, value: v.array(value) });
+const notIn = v.object({ type: v.literal("notIn"), key, value: v.array(value) });
+const includes = v.object({ type: v.literal("includes"), key, value });
+const notIncludes = v.object({ type: v.literal("notIncludes"), key, value });
+const matches = v.object({ type: v.literal("matches"), key, value });
+const notMatches = v.object({ type: v.literal("notMatches"), key, value });
 
-const not: z.ZodType<Not> = z.object({
-  type: z.literal("not"),
-  child: z.union([z.lazy(() => unit), z.lazy(() => and), z.lazy(() => or)]),
+const not: v.BaseSchema<Not> = v.object({
+  type: v.literal("not"),
+  child: v.union([v.recursive(() => unit), v.recursive(() => and), v.recursive(() => or)]),
 });
-const unit = z.union([
+const unit = v.union([
   equals,
   notEquals,
   in_,
@@ -26,32 +26,32 @@ const unit = z.union([
   notMatches,
   not,
 ]);
-const and: z.ZodType<And> = z.object({
-  type: z.literal("and"),
-  children: z.array(z.union([unit, z.lazy(() => and), z.lazy(() => or)])),
+const and: v.BaseSchema<And> = v.object({
+  type: v.literal("and"),
+  children: v.array(v.union([unit, v.recursive(() => and), v.recursive(() => or)])),
 });
-const or: z.ZodType<Or> = z.object({
-  type: z.literal("or"),
-  children: z.array(z.union([unit, z.lazy(() => and), z.lazy(() => or)])),
+const or: v.BaseSchema<Or> = v.object({
+  type: v.literal("or"),
+  children: v.array(v.union([unit, v.recursive(() => and), v.recursive(() => or)])),
 });
-const rule = z.union([and, or, unit]);
+const rule = v.union([and, or, unit]);
 
-type Key = z.infer<typeof key>;
-type Value = z.infer<typeof value>;
-type Equals = z.infer<typeof equals>;
-type NotEquals = z.infer<typeof notEquals>;
-type In = z.infer<typeof in_>;
-type NotIn = z.infer<typeof notIn>;
-type Includes = z.infer<typeof includes>;
-type NotIncludes = z.infer<typeof notIncludes>;
-type Matches = z.infer<typeof matches>;
-type NotMatches = z.infer<typeof notMatches>;
-type Unit = z.infer<typeof unit>;
+type Key = v.Output<typeof key>;
+type Value = v.Output<typeof value>;
+type Equals = v.Output<typeof equals>;
+type NotEquals = v.Output<typeof notEquals>;
+type In = v.Output<typeof in_>;
+type NotIn = v.Output<typeof notIn>;
+type Includes = v.Output<typeof includes>;
+type NotIncludes = v.Output<typeof notIncludes>;
+type Matches = v.Output<typeof matches>;
+type NotMatches = v.Output<typeof notMatches>;
+type Unit = v.Output<typeof unit>;
 
 type Not = { type: "not"; child: Unit | And | Or };
 type And = { type: "and"; children: ReadonlyArray<Unit | And | Or> };
 type Or = { type: "or"; children: ReadonlyArray<Unit | And | Or> };
-type Rule = Readonly<z.infer<typeof rule>>;
+type Rule = Readonly<v.Output<typeof rule>>;
 
 const calcOperators = [
   "in",
@@ -68,10 +68,16 @@ const operators = ["and", "or", "not", ...calcOperators] as const;
 type Operator = (typeof operators)[number];
 type CalcOperator = (typeof calcOperators)[number];
 
+/**
+ * Safely parses an input object using a rule.
+ *
+ * @param input - The input object to be parsed.
+ * @returns An object containing the result of the parsing operation.
+ */
 const safeParseObject = (input: unknown) => {
-  const res = rule.safeParse(input);
+  const res = v.safeParse(rule, input);
   const { success: ok } = res;
-  return ok ? { ok, value: res.data } : { ok, error: res.error };
+  return ok ? { ok, value: res.output } : { ok, error: res.issues };
 };
 
 export {

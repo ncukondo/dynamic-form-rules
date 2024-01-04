@@ -18,5 +18,8 @@
     "editor.insertSpaces": true,
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "vitest.showFailMessages": true
+  "vitest.showFailMessages": true,
+  "cSpell.words": [
+    "valibot"
+  ]
 }

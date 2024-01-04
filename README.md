@@ -5,15 +5,15 @@ This package provides a set of utility functions for evaluating dynamic form rul
 ## Table of Contents
 
 - [Installation](#installation)
-- [safeParseSource Function](#safeparsesource-function)
+- [safeParseSource](#safeparsesource-function)
   - parse source code to rule object
-- [safeParseObject Function](#safeparseobject-function)
+- [safeParseObject](#safeparseobject-function)
   - parse unknown object to rule object
-- [evaluateRule Function](#evaluaterule-function)
+- [evaluateRule](#evaluaterule-function)
   - evaluate rule object
-- [evaluateRuleDict Function](#evaluateruledict-function)
+- [evaluateRuleDict](#evaluateruledict-function)
   - evaluate rule dictionary object
-- [extractDependentKeys Function](#extractdependentkeys-function)
+- [extractDependentKeys](#extractdependentkeys-function)
   - extract dependent keys from rule object
 - [License](#license)
 
@@ -68,25 +68,109 @@ type Result<Rule> = {
 
 #### Examples
 
-- Parsing an "in" operator:
-
 ```typescript
-const condition = safeParseSource("label1 in [1,2,3]");
-// Returns: { ok: true, pos: 17, value: { type: "in", key: "label1", value: ["1", "2", "3"] } }
-```
-
-- Parsing a "not in" operator:
-
-```typescript
-const condition = safeParseSource("label1 notIn [1,2,3]");
-// Returns: { ok: true, pos: 20, value: { type: "notIn", key: "label1", value: ["1", "2", "3"] } }
-```
-
-- Parsing an "equals" operator:
-
-```typescript
-const condition = safeParseSource("label1=1");
+// Parsing an "equals" operator
+const condition1 = safeParseSource("label1=1");
 // Returns: { ok: true, pos: 8, value: { type: "equals", key: "label1", value: "1" } }
+
+// not equals
+const condition2 = safeParseSource("label1<>1");
+// Returns: { ok: true, pos: 9, value: { type: "notEquals", key: "label1", value: "1" } }
+
+// in (you can also use notIn)
+const condition7 = safeParseSource("label1 in [1,2,3]");
+// Returns: { ok: true, pos: 17, value: { type: "in", key: "label1", value: ["1", "2", "3"] } }
+
+// match (you can also use notMatch)
+const condition9 = safeParseSource("label1 match /\\d+/");
+// Returns: { ok: true, pos: 18, value: { type: "match", key: "label1", value: "\\d+" } }
+
+// and
+const condition3 = safeParseSource("label1=1 and label2=2");
+// Returns: { 
+//   ok: true, 
+//   pos: 20, 
+//   value: { 
+//     type: "and", 
+//     children: [
+//       { type: "equals", key: "label1", value: "1" }, 
+//       { type: "equals", key: "label2", value: "2" }
+//     ] 
+//    } 
+// }
+
+// or
+const condition4 = safeParseSource("label1=1 or label2<>2");
+// Returns: {
+//   ok: true,
+//   pos: 19,
+//   value: {
+//     type: "or",
+//     children: [
+//       { type: "equals", key: "label1", value: "1" },
+//       { type: "notEquals", key: "label2", value: "2" }
+//     ]
+//   }
+// }
+
+// and has higher precedence than or
+const condition5 = safeParseSource("label1=1 or label2=2 and label3=3");
+// Returns: {
+//   ok: true,
+//   pos: 29,
+//   value: {
+//     type: "or",
+//     children: [
+//       { type: "equals", key: "label1", value: "1" },
+//       {
+//         type: "and",
+//         children: [
+//           { type: "equals", key: "label2", value: "2" },
+//           { type: "equals", key: "label3", value: "3" }
+//         ]
+//       }
+//     ]
+//   }
+// }
+
+// parentheses
+const condition6 = safeParseSource("(label1=1 or label2=2) and label3=3");
+// Returns: {
+//   ok: true,
+//   pos: 33,
+//   value: {
+//     type: "and",
+//     children: [
+//       {
+//         type: "or",
+//         children: [
+//           { type: "equals", key: "label1", value: "1" },
+//           { type: "equals", key: "label2", value: "2" }
+//         ]
+//       },
+//       { type: "equals", key: "label3", value: "3" }
+//     ]
+//   }
+// }
+
+
+// not
+const condition8 = safeParseSource("not label1 in [1,2,3]");
+// Returns: { ok: true, pos: 21, value: { type: "not", child:{type:"in", key: "label1", value: ["1", "2", "3"] } } }
+
+// multiple keys anyOf (you can also use allOf, noneOf)
+const condition10 = safeParseSource("anyOf(label1,label2)=1");
+// Returns: {
+//   ok: true,
+//   pos: 21,
+//   value: {
+//     type: "or",
+//     children: [
+//       { type: "equals", key: "label1", value: "1" },
+//       { type: "equals", key: "label2", value: "1" }
+//     ]
+//   }
+// }
 ```
 
 ## safeParseObject Function
@@ -125,28 +209,14 @@ type Result<Rule> = {
 
 #### Examples
 
-- Parsing an "in" operator:
-
 ```typescript
-const condition = safeParseObject({ type: 'in', key: 'label1', value: ['1', '2', '3'] });
-
+// success
+const condition1 = safeParseObject({ type: 'in', key: 'label1', value: ['1', '2', '3'] });
 // Returns: { ok: true, value: { type: "in", key: "label1", value: ["1", "2", "3"] } }
-```
 
-- Parsing a "not in" operator:
-
-```typescript
-const condition = safeParseObject({ type: 'notIn', key: 'label1', value: ['1', '2', '3'] });
-
-// Returns: { ok: true, value: { type: "notIn", key: "label1", value: ["1", "2", "3"] } }
-```
-
-- Parsing an "equals" operator:
-
-```typescript
-const condition = safeParseObject({ type: 'equals', key: 'label1', value: '1' });
-
-// Returns: { ok: true, value: { type: "equals", key: "label1", value: "1" } }
+// failure
+const condition2 = safeParseObject({ type: 'in', key: 'label1', value: '1' });
+// Returns: { ok: false, error: Error: <Issues> }
 ```
 
 ## evaluateRule Function
@@ -177,6 +247,15 @@ result (boolean): The result of the evaluation.
 
 #### Examples
 
+- Evaluating an "equals" operator:
+
+```typescript
+const rule = { type: 'equals', key: 'label1', value: '1' };
+const data = { label1: '1' };
+
+const result = evaluateRule(rule, data); // Returns: true
+```
+
 - Evaluating an "in" operator:
 
 ```typescript
@@ -193,15 +272,6 @@ const rule = { type: 'notIn', key: 'label1', value: ['1', '2', '3'] };
 const data = { label1: '1' };
 
 const result = evaluateRule(rule, data); // Returns: false
-```
-
-- Evaluating an "equals" operator:
-
-```typescript
-const rule = { type: 'equals', key: 'label1', value: '1' };
-const data = { label1: '1' };
-
-const result = evaluateRule(rule, data); // Returns: true
 ```
 
 ## evaluateRuleDict Function

@@ -1,5 +1,45 @@
+/**
+ * This file contains the implementation of a rule runner, which evaluates rules based on key values and condition dictionary.
+ * It provides functions for evaluating individual rules, extracting dependent keys from a rule, and evaluating rules based on key values and condition dictionary.
+ * The file also defines various types used in the rule runner.
+ *
+ * Example usage:
+ *
+ * import { evaluateRule, evaluateRuleDict, extractDependentKeysS } from "./rule-runner";
+ *
+ * // Evaluate a rule
+ * const keyValues = {
+ *   name: "John",
+ *   age: "25",
+ *   gender: "male",
+ * };
+ * const rule = {
+ *   type: "equals",
+ *   key: "age",
+ *   value: "25",
+ * };
+ * const result = evaluateRule(keyValues, rule); // Returns true
+ *
+ * // Extract dependent keys from a rule
+ * const dependentKeys = extractDependentKeys(rule); // Returns ["age"]
+ *
+ * // Evaluate rules based on key values and condition dictionary
+ * const conditionDict: ConditionDict<MyKeyValues> = {
+ *   name: { type: "equals", key: "gender", value: "male" },
+ *   age: { type: "equals", key: "name", value: "John" },
+ *   gender: { type: "equals", key: "age", value: "100" },
+ * };
+ *
+ * const evaluationResult = evaluateRuleDict(keyValues, conditionDict);
+ * // Returns {
+ * //   ok: ["name",  "gender"],
+ * //   fail: ["age"],
+ * //   undefined: []
+ * // }
+ */
 import { type Rule } from "./schema";
 
+// Define types
 type KeyValues = Record<string, string>;
 type Key<T extends KeyValues> = keyof T;
 type Value<T extends KeyValues, K extends Key<T>> = T[K];
@@ -13,6 +53,7 @@ type ConditionDict<T extends KeyValues> = {
 };
 type PartialKey<T extends Record<string, unknown>> = (keyof T)[][number];
 
+// Evaluate a rule based on key values
 const evaluateRule = <T extends KeyValues>(keyValues: T, rule: Rule): boolean => {
   const type = rule.type;
   switch (type) {
@@ -43,6 +84,7 @@ const evaluateRule = <T extends KeyValues>(keyValues: T, rule: Rule): boolean =>
   }
 };
 
+// Extract dependent keys from a rule
 const extractDependentKeys = (rule: Rule): string[] => {
   const removeDuplicates = <T>(array: T[]): T[] => [...new Set(array)];
   const type = rule.type;
@@ -61,11 +103,14 @@ const extractDependentKeys = (rule: Rule): string[] => {
   }
 };
 
+// Result of evaluating rules
 type EvaluateRuleResult<T extends KeyValues> = {
   ok: (keyof T)[];
   fail: (keyof T)[];
   undefined: (keyof T)[];
 };
+
+// Evaluate rules based on key values and condition dictionary
 const evaluateRuleDict = <T extends KeyValues>(
   keyValues: T,
   conditionDict: ConditionDict<T>,
@@ -81,6 +126,7 @@ const evaluateRuleDict = <T extends KeyValues>(
       }),
     ),
   } as Record<PartialKey<T>, PartialKey<T>[]>;
+
   type ResultDict = Record<keyof T, "ok" | "fail" | "undefined">;
   const resultDict = Object.fromEntries(
     Object.keys(keyValues).map((key: keyof T) => {
@@ -90,14 +136,19 @@ const evaluateRuleDict = <T extends KeyValues>(
       return [key, result ? "ok" : "fail"];
     }),
   ) as ResultDict;
+
   const extraDisabledKeys: DisabledKeys<KeyValues> = Object.entries(combinedDependencies)
     .filter(([, keys]) => {
       return keys?.some((key) => resultDict[key as keyof T] === "fail");
     })
     .map(([key]) => key);
+
   for (const key of extraDisabledKeys) {
     resultDict[key as keyof T] = "fail";
   }
+
+  // Return the result dictionary
+
   return {
     ok: Object.entries(resultDict)
       .filter(([, result]) => result === "ok")

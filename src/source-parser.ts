@@ -45,6 +45,7 @@
  */
 import {
   type Parser,
+  type Result,
   regexp,
   string,
   map,
@@ -191,9 +192,13 @@ const parenthesizedUnit: Parser<Rule> = lazy<Rule>(() =>
 
 const unit: Parser<Rule> = lazy<Rule>(() => or<Rule>(orUnit, andUnit, baseUnit, parenthesizedUnit));
 
-const condition: Parser<Rule> = quoted(white, unit, white);
+const rule: Parser<Rule> = quoted(white, unit, white);
 
-const safeParseSource = (input: string) => skipSecond(condition, eof())(input, 0);
+/**
+ * Parse source string to rule object.
+ * @param input source string
+ * @returns rule object
+ */
+const safeParseSource = (input: string): Result<Rule> => skipSecond(rule, eof())(input, 0);
 
 export { safeParseSource, calcOperators, type Rule as Condition };
-export { baseUnit, andUnit, orUnit, unit, condition, complexKey };

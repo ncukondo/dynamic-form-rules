@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "biomejs.biome",
-    "yoavbls.pretty-ts-errors"
+    "yoavbls.pretty-ts-errors",
+    "zixuanchen.vitest-explorer"
   ]
 }

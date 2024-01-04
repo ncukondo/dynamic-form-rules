@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { safeParseSource } from "../source-parser";
 
 test("in operator", () => {

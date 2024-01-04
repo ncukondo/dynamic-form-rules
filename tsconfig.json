@@ -8,7 +8,9 @@
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationDir": "./dist",
     "composite": true,
     "strict": true,
     "downlevelIteration": true,
@@ -17,8 +19,10 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
+    "rootDir":"./src",
     "types": [
       "bun-types" // add Bun global
-    ]
-  }
+    ],
+  },
+  "include": ["src"]
 }

@@ -2,8 +2,8 @@
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
   "files.eol": "\n",
-  "terminal.integrated.defaultProfile.windows": "Git Bash",
   "editor.formatOnSave": true,
+  "vitest.enable": true,
   "[python]": {
     "editor.tabSize": 4,
     "editor.insertSpaces": true
@@ -18,7 +18,5 @@
     "editor.insertSpaces": true,
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "cSpell.words": [
-    "DATETIME"
-  ]
+  "vitest.showFailMessages": true
 }

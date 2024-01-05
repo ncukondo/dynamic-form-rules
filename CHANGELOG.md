@@ -1,5 +1,13 @@
 # dynamic-form-rules
 
+## 0.0.4
+
+### Patch Changes
+
+- 9cbed0a: update readme
+- 9cbed0a: add ruleToSource
+- a176580: update readme
+
 ## 0.0.3
 
 ### Patch Changes

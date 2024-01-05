@@ -22,5 +22,9 @@
   "cSpell.words": [
     "ncukondo",
     "valibot"
-  ]
+  ],
+  "markdownlint.config": {
+    "MD024": false,
+    "MD034": false
+}
 }

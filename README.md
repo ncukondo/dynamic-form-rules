@@ -5,16 +5,19 @@ This package provides a set of utility functions for evaluating dynamic form rul
 ## Table of Contents
 
 - [Installation](#installation)
-- [safeParseSource](#safeparsesource-function)
-  - parse source code to rule object
-- [safeParseObject](#safeparseobject-function)
-  - parse unknown object to rule object
-- [evaluateRule](#evaluaterule-function)
-  - evaluate rule object
-- [evaluateRuleDict](#evaluateruledict-function)
-  - evaluate rule dictionary object
-- [extractDependentKeys](#extractdependentkeys-function)
-  - extract dependent keys from rule object
+- Functions
+  - [safeParseSource](#safeparsesource)
+    - parse source code to rule object
+  - [safeParseObject](#safeparseobject)
+    - parse unknown object to rule object
+  - [evaluateRule](#evaluaterule)
+    - evaluate rule object
+  - [evaluateRuleDict](#evaluateruledict)
+    - evaluate rule dictionary object
+  - [extractDependentKeys](#extractdependentkeys)
+    - extract dependent keys from rule object
+  - [ruleToSource](#ruletosource)
+    - convert rule object to source code
 - [License](#license)
 
 ## Installation
@@ -31,13 +34,13 @@ or
 yarn add @ncukondo/dynamic-form-rules
 ```
 
-## safeParseSource Function
+## Functions
 
-### Description
+### safeParseSource
 
 The `safeParseSource` function is a utility function used to safely parse source code defines dynamic form rule.
 
-### Usage
+#### Usage
 
 ```typescript
 import { safeParseSource } from '@ncukondo/dynamic-form-rules';
@@ -173,13 +176,11 @@ const condition10 = safeParseSource("anyOf(label1,label2)=1");
 // }
 ```
 
-## safeParseObject Function
-
-### Description
+### safeParseObject
 
 The `safeParseObject` function is a utility function used to safely parse unknown objects to rule object.
 
-### Usage
+#### Usage
 
 ```typescript
 import { safeParseObject } from '@ncukondo/dynamic-form-rules';
@@ -219,13 +220,11 @@ const condition2 = safeParseObject({ type: 'in', key: 'label1', value: '1' });
 // Returns: { ok: false, error: Error: <Issues> }
 ```
 
-## evaluateRule Function
-
-### Description
+### evaluateRule
 
 The `evaluateRule` function is a utility function used to evaluate a rule object.
 
-### Usage
+#### Usage
 
 ```typescript
 import { evaluateRule } from '@ncukondo/dynamic-form-rules';
@@ -274,13 +273,11 @@ const data = { label1: '1' };
 const result = evaluateRule(rule, data); // Returns: false
 ```
 
-## evaluateRuleDict Function
-
-### Description
+### evaluateRuleDict
 
 The `evaluateRuleDict` function is a utility function used to evaluate a rule dictionary object.
 
-### Usage
+#### Usage
 
 ```typescript
 import { evaluateRuleDict } from '@ncukondo/dynamic-form-rules';
@@ -327,13 +324,11 @@ const ruleDict = {
 const result = evaluateRuleDict(data, ruleDict); // Returns: {ok:["key1","key2"],fail:[],undefined:["key3"]}
 ```
 
-## extractDependentKeys Function
-
-### Description
+### extractDependentKeys
 
 The `extractDependentKeys` function is a utility function used to extract dependent keys from a rule object.
 
-### Usage
+#### Usage
 
 ```typescript
 import { extractDependentKeys } from '@ncukondo/dynamic-form-rules';
@@ -365,6 +360,58 @@ const rule = {
 };
 
 const dependentKeys = extractDependentKeys(rule); // Returns: ["label1","label2"]
+```
+
+### ruleToSource
+
+Convert rule object to source code.
+
+#### Usage
+
+```typescript
+import { ruleToSource } from '@ncukondo/dynamic-form-rules';
+
+const rule = { type: 'equals', key: 'label1', value: '1' };
+
+const source = ruleToSource(rule); // Returns: "label1=1"
+```
+
+#### Parameters
+
+- rule (Rule): The rule object to be evaluated.
+
+#### Returns
+
+source (string): The source code converted from the rule object.
+
+#### Examples
+
+- Converting rule with "and" operator to source code:
+
+```typescript
+const rule = {
+  type: 'and',
+  children: [
+    { type: 'equals', key: 'label1', value: '1' },
+    { type: 'equals', key: 'label2', value: '2' },
+  ],
+};
+
+const source = ruleToSource(rule); // Returns: "label1=1 and label2=2"
+```
+
+- Converting rule with "or" operator to source code:
+
+```typescript
+const rule = {
+  type: 'or',
+  children: [
+    { type: 'equals', key: 'label1', value: '1' },
+    { type: 'equals', key: 'label2', value: '2' },
+  ],
+};
+
+const source = ruleToSource(rule); // Returns: "(label1=1 or label2=2)"
 ```
 
 ## License

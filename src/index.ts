@@ -6,3 +6,4 @@ export {
 } from "./rule-runner";
 export { safeParseSource } from "./source-parser";
 export { safeParseObject, type Rule } from "./schema";
+export { ruleToSource } from "./rule-to-source";

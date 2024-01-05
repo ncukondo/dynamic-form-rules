@@ -17,7 +17,7 @@
     }
   },
   "scripts": {
-    "build": "vite build && tsc",
+    "build": "tsc && vite build",
     "test": "vitest",
     "version": "changeset version",
     "publish": "changeset publish"

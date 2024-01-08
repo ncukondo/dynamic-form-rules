@@ -1,5 +1,11 @@
 # dynamic-form-rules
 
+## 0.0.5
+
+### Patch Changes
+
+- update escape for quote in quoted key and value
+
 ## 0.0.4
 
 ### Patch Changes

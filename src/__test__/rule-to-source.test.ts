@@ -22,6 +22,18 @@ describe("ruleToSource", () => {
     );
   });
 
+  test("key and value with single quote", () => {
+    expect(ruleToSource({ type: "equals", key: "key'1", value: "value'1" })).toEqual(
+      `"key'1"="value'1"`,
+    );
+  });
+
+  test("key and value with double quote and single quote", () => {
+    expect(ruleToSource({ type: "equals", key: "key'\"1", value: "value'1" })).toEqual(
+      `'key''"1'="value'1"`,
+    );
+  });
+
   test("and operator", () => {
     expect(
       ruleToSource({

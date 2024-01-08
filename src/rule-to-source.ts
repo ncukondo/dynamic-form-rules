@@ -2,8 +2,8 @@ import { Rule } from "./schema";
 
 const encode = (str: string): string => {
   if (str.match(/^[a-zA-Z0-9_]+$/)) return str;
-  if (str.includes('"')) return `'${str}'`;
-  return `"${str}"`;
+  if (str.includes('"')) return `'${str.replaceAll("'", "''")}'`;
+  return `"${str.replaceAll('"', '""')}"`;
 };
 
 const ruleToSource = (rule: Rule): string => {

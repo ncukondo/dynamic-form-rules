@@ -76,6 +76,14 @@ type Result<Rule> = {
 const condition1 = safeParseSource("label1=1");
 // Returns: { ok: true, pos: 8, value: { type: "equals", key: "label1", value: "1" } }
 
+// key and value other than a-zA-Z0-9_ must be quoted
+const condition2 = safeParseSource("label1='1.1'");
+// Returns: { ok: true, pos: 11, value: { type: "equals", key: "label1", value: "1.1" } }
+
+// key and value with quote should be escaped by double
+const condition3 = safeParseSource("label1='1''1'");
+// Returns: { ok: true, pos: 12, value: { type: "equals", key: "label1", value: "1'1" } }
+
 // not equals
 const condition2 = safeParseSource("label1<>1");
 // Returns: { ok: true, pos: 9, value: { type: "notEquals", key: "label1", value: "1" } }

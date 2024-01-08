@@ -58,6 +58,7 @@ import {
   quoted,
   sepBy,
   eof,
+  many,
   peak,
 } from "./simple-parser";
 import {
@@ -95,9 +96,30 @@ const and = textOperator("and");
 const or_ = textOperator("or");
 const not = textOperator("not");
 
+const doubleQuotedContent = map(
+  many(
+    or(
+      map(string('""'), () => '"'),
+      regexp(/[^"]/),
+    ),
+  ),
+  (res) => res.join(""),
+);
+const doubleQuotedString = quoted(doubleQuote, doubleQuotedContent, doubleQuote);
+const singleQuotedContent = map(
+  many(
+    or(
+      map(string("''"), () => "'"),
+      regexp(/[^']/),
+    ),
+  ),
+  (res) => res.join(""),
+);
+const singleQuotedString = quoted(singleQuote, singleQuotedContent, singleQuote);
+
 const simpleKey = regexp(/[^,=()<>\s\"\'\]\[]+/);
-const doubleQuotedKey = quoted(doubleQuote, regexp(/[^"]*/), doubleQuote);
-const singleQuotedKey = quoted(singleQuote, regexp(/[^']*/), singleQuote);
+const doubleQuotedKey = doubleQuotedString;
+const singleQuotedKey = singleQuotedString;
 const key = or(doubleQuotedKey, singleQuotedKey, simpleKey);
 
 const params = skipFirst(
@@ -112,8 +134,8 @@ const complexKey = map(seq(keyOperator, params), ([operator, keys]) => ({
 }));
 
 const simpleValue = regexp(/[^,=()<>\s\"\'\]\[\]]+/);
-const doubleQuotedValue = quoted(doubleQuote, regexp(/[^"]*/), doubleQuote);
-const singleQuotedValue = quoted(singleQuote, regexp(/[^']*/), singleQuote);
+const doubleQuotedValue = doubleQuotedString;
+const singleQuotedValue = singleQuotedString;
 const value = skipFirst(white, or(doubleQuotedValue, singleQuotedValue, simpleValue));
 
 const array = skipFirst(white, quoted(lSquare, sepBy(value, comma), rSquare));

@@ -1,24 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { safeParseSource } from "../source-parser";
 
-test("in operator", () => {
-  const condition = safeParseSource("label1 in [1,2,3]");
-  expect(condition).toEqual({
-    ok: true,
-    pos: 17,
-    value: { type: "in", key: "label1", value: ["1", "2", "3"] },
-  });
-});
-
-test("not in operator", () => {
-  const condition = safeParseSource("label1 notIn [1,2,3]");
-  expect(condition).toEqual({
-    ok: true,
-    pos: 20,
-    value: { type: "notIn", key: "label1", value: ["1", "2", "3"] },
-  });
-});
-
 test("equals operator", () => {
   const condition = safeParseSource("label1=1");
   expect(condition).toEqual({
@@ -55,6 +37,24 @@ test("not includes operator", () => {
   });
 });
 
+test("in operator", () => {
+  const condition = safeParseSource("label1 in [1,2,3]");
+  expect(condition).toEqual({
+    ok: true,
+    pos: 17,
+    value: { type: "in", key: "label1", value: ["1", "2", "3"] },
+  });
+});
+
+test("not in operator", () => {
+  const condition = safeParseSource("label1 notIn [1,2,3]");
+  expect(condition).toEqual({
+    ok: true,
+    pos: 20,
+    value: { type: "notIn", key: "label1", value: ["1", "2", "3"] },
+  });
+});
+
 test("matches operator", () => {
   const condition = safeParseSource("label1 matches 'label\\d+'");
   expect(condition).toEqual({
@@ -70,6 +70,51 @@ test("not matches operator", () => {
     ok: true,
     pos: 28,
     value: { type: "notMatches", key: "label1", value: "label\\d+" },
+  });
+});
+
+test("key with white spaces", () => {
+  const condition = safeParseSource("'label 1'=1");
+  expect(condition).toEqual({
+    ok: true,
+    pos: 11,
+    value: { type: "equals", key: "label 1", value: "1" },
+  });
+});
+
+test("key with white spaces and quotes", () => {
+  const condition = safeParseSource("'''label 1'''=1");
+  expect(condition).toEqual({
+    ok: true,
+    pos: 15,
+    value: { type: "equals", key: "'label 1'", value: "1" },
+  });
+});
+
+test("value with white spaces", () => {
+  const condition = safeParseSource("label1= '1 2 3'");
+  expect(condition).toEqual({
+    ok: true,
+    pos: 15,
+    value: { type: "equals", key: "label1", value: "1 2 3" },
+  });
+});
+
+test("value with white spaces and quotes", () => {
+  const condition = safeParseSource('label1= """1 2 3""" ');
+  expect(condition).toEqual({
+    ok: true,
+    pos: 20,
+    value: { type: "equals", key: "label1", value: '"1 2 3"' },
+  });
+});
+
+test("empty value", () => {
+  const condition = safeParseSource("label1=''");
+  expect(condition).toEqual({
+    ok: true,
+    pos: 9,
+    value: { type: "equals", key: "label1", value: "" },
   });
 });
 

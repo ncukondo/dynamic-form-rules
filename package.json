@@ -4,7 +4,7 @@
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
   "types": "./types/index.d.ts",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "files": [
     "dist",
     "types",
@@ -19,9 +19,7 @@
   },
   "scripts": {
     "build": "tsc && vite build",
-    "test": "vitest",
-    "version": "changeset version",
-    "publish": "changeset publish"
+    "test": "vitest"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.4.1",

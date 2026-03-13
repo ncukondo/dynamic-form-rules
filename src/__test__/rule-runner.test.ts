@@ -1,5 +1,5 @@
-import { expect, test, describe } from "vitest";
-import { evaluateRule, extractDependentKeys, evaluateRuleDict } from "../rule-runner";
+import { describe, expect, test } from "vitest";
+import { evaluateRule, evaluateRuleDict, extractDependentKeys } from "../rule-runner";
 
 describe("evaluateRule", () => {
   test("equals: [ok]", () => {

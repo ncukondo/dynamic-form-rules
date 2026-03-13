@@ -1,3 +1,12 @@
+import {
+  type And,
+  type CalcOperator,
+  calcOperators,
+  type Not,
+  type Or,
+  type Rule,
+  type Unit,
+} from "./schema";
 /**
  * Simple parser for domain specific language(DSL) of dynamic form rule definition.
  *
@@ -44,32 +53,23 @@
  *   }
  */
 import {
-  type Parser,
-  type Result,
-  regexp,
-  string,
+  assert,
+  eof,
+  lazy,
+  many,
   map,
   or,
+  type Parser,
+  peak,
+  quoted,
+  type Result,
+  regexp,
+  sepBy,
   seq,
   skipFirst,
   skipSecond,
-  lazy,
-  assert,
-  quoted,
-  sepBy,
-  eof,
-  many,
-  peak,
+  string,
 } from "./simple-parser";
-import {
-  type Rule,
-  type And,
-  type Or,
-  type Unit,
-  type Not,
-  calcOperators,
-  CalcOperator,
-} from "./schema";
 
 const sepByAtLeast = <T>(parser: Parser<T>, sep: Parser<unknown>, atLeast: number): Parser<T[]> =>
   assert(
@@ -117,7 +117,7 @@ const singleQuotedContent = map(
 );
 const singleQuotedString = quoted(singleQuote, singleQuotedContent, singleQuote);
 
-const simpleKey = regexp(/[^,=()<>\s\"\'\]\[]+/);
+const simpleKey = regexp(/[^,=()<>\s"'\][]+/);
 const doubleQuotedKey = doubleQuotedString;
 const singleQuotedKey = singleQuotedString;
 const key = or(doubleQuotedKey, singleQuotedKey, simpleKey);
@@ -133,7 +133,7 @@ const complexKey = map(seq(keyOperator, params), ([operator, keys]) => ({
   keys,
 }));
 
-const simpleValue = regexp(/[^,=()<>\s\"\'\]\[\]]+/);
+const simpleValue = regexp(/[^,=()<>\s"'\][\]]+/);
 const doubleQuotedValue = doubleQuotedString;
 const singleQuotedValue = singleQuotedString;
 const value = skipFirst(white, or(doubleQuotedValue, singleQuotedValue, simpleValue));

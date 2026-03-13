@@ -1,19 +1,19 @@
-import { test, expect } from "vitest";
+import { expect, test } from "vitest";
 import {
-  string,
-  regexp,
+  assert,
   eof,
+  lazy,
   map,
   or,
+  peak,
+  prettyPrintError,
+  quoted,
+  regexp,
+  sepBy,
   seq,
   skipFirst,
   skipSecond,
-  lazy,
-  assert,
-  quoted,
-  sepBy,
-  peak,
-  prettyPrintError,
+  string,
 } from "../simple-parser";
 
 test("string", () => {
@@ -226,7 +226,6 @@ test("peak fail", () => {
   });
 });
 
-// biome-ignore lint/style/noUnusedTemplateLiteral: <explanation>
 test(`prettyPrintError`, () => {
   expect(prettyPrintError("abc", { ok: false, pos: 1, expect: `"b"` })).toEqual(
     `\

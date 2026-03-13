@@ -1,4 +1,4 @@
-import { Rule } from "./schema";
+import type { Rule } from "./schema";
 
 const encode = (str: string): string => {
   if (str.match(/^[a-zA-Z0-9_]+$/)) return str;

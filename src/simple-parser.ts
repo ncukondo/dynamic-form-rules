@@ -28,9 +28,7 @@ type Result<T> = OkResult<T> | FailResult;
 /**
  * An interface for a parser function.
  */
-interface Parser<T> {
-  (text: string, pos: number): Result<T>;
-}
+type Parser<T> = (text: string, pos: number) => Result<T>;
 
 // Utility types (mainly for seq function)
 type Box<T> = Parser<T>;
@@ -53,7 +51,8 @@ type UnBoxTuple<T extends TupleBox<unknown>> = {
  * parser("1 2", 0); // { ok: true, pos: 3, value: "1" }
  */
 const regexp: (reg: RegExp) => Parser<string> =
-  (reg: RegExp, index = 0) => (text: string, pos: number) => {
+  (reg: RegExp, index = 0) =>
+  (text: string, pos: number) => {
     const regObj = new RegExp(reg.source, "ym");
     const match = text.substring(pos).match(regObj);
     if (match && match.length < index + 1) {

@@ -22,7 +22,7 @@
  *   const rule: Rule = result.value;
  *   // Use the parsed rule for further processing
  * } else {
- *   const errors: v.Issue[] = result.error;
+ *   const errors: v.InferIssue<typeof rule>[] = result.error;
  *   // Handle the parsing errors
  * }
  */
@@ -42,9 +42,9 @@ const matches = v.object({ type: v.literal("matches"), key, value });
 const notMatches = v.object({ type: v.literal("notMatches"), key, value });
 
 // Define recursive schemas
-const not: v.BaseSchema<Not> = v.object({
+const not: v.GenericSchema<Not> = v.object({
   type: v.literal("not"),
-  child: v.union([v.recursive(() => unit), v.recursive(() => and), v.recursive(() => or)]),
+  child: v.union([v.lazy(() => unit), v.lazy(() => and), v.lazy(() => or)]),
 });
 const unit = v.union([
   equals,
@@ -57,34 +57,34 @@ const unit = v.union([
   notMatches,
   not,
 ]);
-const and: v.BaseSchema<And> = v.object({
+const and: v.GenericSchema<And> = v.object({
   type: v.literal("and"),
-  children: v.array(v.union([unit, v.recursive(() => and), v.recursive(() => or)])),
+  children: v.array(v.union([unit, v.lazy(() => and), v.lazy(() => or)])),
 });
-const or: v.BaseSchema<Or> = v.object({
+const or: v.GenericSchema<Or> = v.object({
   type: v.literal("or"),
-  children: v.array(v.union([unit, v.recursive(() => and), v.recursive(() => or)])),
+  children: v.array(v.union([unit, v.lazy(() => and), v.lazy(() => or)])),
 });
 const rule = v.union([and, or, unit]);
 
 // Define types based on schema outputs
-type Key = v.Output<typeof key>;
-type Value = v.Output<typeof value>;
-type Equals = v.Output<typeof equals>;
-type NotEquals = v.Output<typeof notEquals>;
-type In = v.Output<typeof in_>;
-type NotIn = v.Output<typeof notIn>;
-type Includes = v.Output<typeof includes>;
-type NotIncludes = v.Output<typeof notIncludes>;
-type Matches = v.Output<typeof matches>;
-type NotMatches = v.Output<typeof notMatches>;
-type Unit = v.Output<typeof unit>;
+type Key = v.InferOutput<typeof key>;
+type Value = v.InferOutput<typeof value>;
+type Equals = v.InferOutput<typeof equals>;
+type NotEquals = v.InferOutput<typeof notEquals>;
+type In = v.InferOutput<typeof in_>;
+type NotIn = v.InferOutput<typeof notIn>;
+type Includes = v.InferOutput<typeof includes>;
+type NotIncludes = v.InferOutput<typeof notIncludes>;
+type Matches = v.InferOutput<typeof matches>;
+type NotMatches = v.InferOutput<typeof notMatches>;
+type Unit = v.InferOutput<typeof unit>;
 
 // Define rule types
 type Not = { type: "not"; child: Unit | And | Or };
 type And = { type: "and"; children: ReadonlyArray<Unit | And | Or> };
 type Or = { type: "or"; children: ReadonlyArray<Unit | And | Or> };
-type Rule = Readonly<v.Output<typeof rule>>;
+type Rule = Readonly<v.InferOutput<typeof rule>>;
 
 // Define operators
 const calcOperators = [
@@ -111,7 +111,7 @@ type SafeParseObjectResult =
     }
   | {
       ok: false;
-      error: v.Issue[];
+      error: v.InferIssue<typeof rule>[];
     };
 
 /**

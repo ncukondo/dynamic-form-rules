@@ -4,6 +4,6 @@ export {
   extractDependentKeys,
   type KeyValues,
 } from "./rule-runner";
-export { safeParseSource } from "./source-parser";
-export { safeParseObject, type Rule } from "./schema";
 export { ruleToSource } from "./rule-to-source";
+export { type Rule, safeParseObject } from "./schema";
+export { safeParseSource } from "./source-parser";

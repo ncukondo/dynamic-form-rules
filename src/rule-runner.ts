@@ -37,7 +37,7 @@
  * //   undefined: []
  * // }
  */
-import { type Rule } from "./schema";
+import type { Rule } from "./schema";
 
 // Define types
 type KeyValues = Record<string, string>;

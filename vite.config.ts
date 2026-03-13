@@ -1,6 +1,5 @@
-import { resolve } from "path";
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
-import { terser } from "rollup-plugin-terser";
 
 export default defineConfig({
   build: {
